@@ -3,42 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>¡Felicidades Graduados!</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="preconnect" href="https://googleapis.com">
-  <link rel="preconnect" href="https://gstatic.com" crossorigin>
+  <title>¡Feliz Graduación!</title>
+  <!-- Fuentes tipográficas necesarias para los estilos -->
   <link href="https://googleapis.com" rel="stylesheet">
+  <!-- Vinculación con tu archivo CSS -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- VENTANA FLOTANTE PARA ESCRIBIR EL NOMBRE -->
+  <!-- CANVAS PARA LOS FUEGOS ARTIFICIALES -->
+  <canvas id="canvas-pirotecnia"></canvas>
+
+  <!-- MODAL DE REGISTRO INICIAL -->
   <div id="modal-graduado" class="modal-graduado">
     <div class="tarjeta-registro">
-      <h3>🎓 ¡Llegó el día de la Graduación!</h3>
+      <h3>🎓 ¡Llegó el día!</h3>
       <p>Escribe el nombre del graduado o graduada:</p>
-      <input type="text" id="nombre-graduado" placeholder="Escribe el nombre aquí...">
+      <input type="text" id="nombre-graduado" placeholder="Nombre del alumno" autocomplete="off">
       <button id="btn-celebrar">¡Celebrar! 🎉</button>
     </div>
   </div>
 
-  <!-- CAPA PARA LOS FUEGOS ARTIFICIALES -->
-  <canvas id="canvas-pirotecnia"></canvas>
-
-  <!-- TARJETA DE RECONOCIMIENTO PRINCIPAL -->
+  <!-- TARJETA DEL DIPLOMA (SE ACTIVA CON EL BOTÓN) -->
   <div class="tarjeta-diploma">
+    <!-- Modelado 3D del sombrero -->
     <div class="sombrero-3d">
       <div class="rombo-superior"></div>
       <div class="base-cilindro"></div>
       <div class="borla-hilo"></div>
       <div class="borla-gota"></div>
     </div>
-    
+
     <h1>¡MUCHAS FELICIDADES!</h1>
     <h2 id="texto-nombre">GRADUADO</h2>
-    <p class="mensaje-inspirador">Por haber concluido con éxito el curso. ¡Sigan aprendiendo y practicando cada día!</p>
-    
+    <p class="mensaje-inspirador">Por haber concluido con éxito este ciclo escolar. ¡Sigue aprendiendo, jugando y practicando cada día!</p>
+
+    <!-- CUADRO DE HONOR / HISTORIAL -->
+    <div class="contenedor-historial">
+      <h4>🎓 CUADRO DE HONOR</h4>
+      <div id="lista-graduados" class="lista-graduados">
+        <!-- Los graduados se irán agregando aquí desde JS -->
+      </div>
+    </div>
+
     <button id="btn-otro" class="btn-otro">Celebrar a alguien más 🔄</button>
   </div>
 
+  <!-- Vinculación con tu archivo JavaScript -->
+  <script src="script.js"></script>
 </body>
 </html>
