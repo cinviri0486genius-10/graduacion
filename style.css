@@ -252,16 +252,18 @@ h2 {
 
 /* ESTILOS PARA EL AVATAR DE ROBLOX */
 .avatar-roblox {
-  width: 90px;
+  width: 280px; /* Tamaño mucho más grande y visible */
   height: auto;
-  margin: 10px auto -10px auto;
+  margin: 15px auto;
   display: block;
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5)); /* Destello blanco sutil */
-  animation: flotarRoblox 3s ease-in-out infinite;
+  border-radius: 15px; /* Bordes redondeados para que combine con el diploma */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); /* Sombra para darle profundidad */
+  border: 2px solid rgba(255, 202, 40, 0.4); /* Marco dorado sutil */
+  animation: flotarRoblox 4s ease-in-out infinite;
 }
 
 /* ANIMACIÓN SUAVE DE LEVITACIÓN */
 @keyframes flotarRoblox {
-  0%, 100% { transform: translateY(0) rotate(2deg); }
-  50% { transform: translateY(-8px) rotate(-2deg); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
