@@ -249,3 +249,19 @@ h2 {
   50% { transform: scale(1.3) rotate(15deg); }
   100% { transform: scale(1) rotate(0deg); }
 }
+
+/* ESTILOS PARA EL AVATAR DE ROBLOX */
+.avatar-roblox {
+  width: 90px;
+  height: auto;
+  margin: 10px auto -10px auto;
+  display: block;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5)); /* Destello blanco sutil */
+  animation: flotarRoblox 3s ease-in-out infinite;
+}
+
+/* ANIMACIÓN SUAVE DE LEVITACIÓN */
+@keyframes flotarRoblox {
+  0%, 100% { transform: translateY(0) rotate(2deg); }
+  50% { transform: translateY(-8px) rotate(-2deg); }
+}
