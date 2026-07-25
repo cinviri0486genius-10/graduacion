@@ -18,7 +18,7 @@ let confetiLista = [];
 let sombrerosLista = [];
 let loopFuegos = null;
 
-// UN SOLO CANAL DE AUDIO GLOBAL (Evita que el navegador se trave o bloquee)
+// UN SOLO CANAL DE AUDIO GLOBAL (Evita que el navegador se trabe o bloquee)
 let audioCtx = null;
 
 function iniciarAudioSeguro() {
@@ -183,8 +183,14 @@ function animarFuegos() {
     if (p.alpha <= 0) { particulas.splice(index, 1); } else { p.actualizar(); p.dibujar(); }
   });
   
+  // SECCIÓN COMPLETAMENTE CORREGIDA: Eliminamos la propiedad .gray que causaba el bloqueo
   confetiLista.forEach((c, index) => {
-    if (c.y > canvas.height) { confetiLista[index] = new ConfetiDorada(); } else { c.actualizar(); c.gray = 0; c.actualizar(); c.dibujar(); }
+    if (c.y > canvas.height) { 
+      confetiLista[index] = new ConfetiDorada(); 
+    } else { 
+      c.actualizar(); 
+      c.dibujar(); 
+    }
   });
 
   sombrerosLista.forEach((s, index) => {
@@ -233,7 +239,7 @@ if (sombreroElement) {
 btnCelebrar.addEventListener('click', () => {
   const nombre = inputNombre.value.trim();
   if (nombre !== "") {
-    iniciarAudioSeguro(); // Desbloquea los permisos de sonido de forma interactiva
+    iniciarAudioSeguro(); // Desbloquea de manera segura el contexto de audio interactivo
     textoNombre.textContent = nombre;
     modal.classList.add('oculto');
     tarjeta.classList.add('activo');
