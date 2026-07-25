@@ -16,8 +16,8 @@ const listaGraduadosDiv = document.getElementById('lista-graduados');
 let particulas = [];
 let confetiLista = [];
 let sombrerosLista = [];
+let globosLista = []; // Nueva lista de globos integrada
 let loopFuegos = null;
-
 let audioCtx = null;
 
 function iniciarAudioSeguro() {
@@ -79,7 +79,7 @@ function reproducirAplausos() {
 }
 
 // ==========================================
-// PARTE 2: MOTORES DE FÍSICA PARA PARTÍCULAS
+// PARTE 2: MOTORES DE FÍSICA PARA PARTÍCULAS Y CONFETI
 // ==========================================
 
 class Particula {
@@ -139,16 +139,48 @@ class SombreritoVolador {
     this.vy = Math.sin(angulo) * velocidad;
     this.gravedad = 0.2; 
     this.rotacion = Math.random() * 360;
-    this.velocidadRotacion = Math.random() * 10 - 5;
+    this.velocidadRotacion = Math.random() * 8 - 4;
     this.alpha = 1;
   }
   dibujar() {
-    ctx.save(); ctx.globalAlpha = this.alpha; ctx.translate(this.x, this.y);
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.translate(this.x, this.y);
     ctx.rotate(this.rotacion * Math.PI / 180);
-    ctx.fillStyle = '#0f172a'; ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(15, 0); ctx.lineTo(0, 8); ctx.lineTo(-15, 0);
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#f59e0b'; ctx.fillRect(-8, 2, 2, 8); ctx.restore();
+    
+    // 1. Base del sombrero (Cilindro oscuro)
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.ellipse(0, 4, 8, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(-8, 0, 16, 4);
+    
+    // 2. Rombo superior (Tapa del birrete)
+    ctx.fillStyle = '#1e293b';
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, -6);   // Arriba
+    ctx.lineTo(16, 0);   // Derecha
+    ctx.lineTo(0, 6);    // Abajo
+    ctx.lineTo(-16, 0);  // Izquierda
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    
+    // 3. Borla Dorada (Hilo y gota colgante)
+    ctx.strokeStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-10, 4);
+    ctx.stroke();
+    
+    ctx.fillStyle = '#d97706';
+    ctx.beginPath();
+    ctx.arc(-10, 4, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
   }
   actualizar() {
     this.x += this.vx; this.vy += this.gravedad; this.y += this.vy;
@@ -166,7 +198,61 @@ function crearFuegoArtificial() {
 }
 
 // ==========================================
-// PARTE 3: BUCLE GRÁFICO E INTERACCIÓN
+// PARTE 3: NUEVA CLASE PARA GLOBOS FLOTANTES
+// ==========================================
+
+class GloboFlotante {
+  constructor() {
+    this.ancho = Math.random() * 20 + 25;
+    this.alto = this.ancho * 1.25;
+    this.x = Math.random() * (canvas.width - this.ancho);
+    this.y = canvas.height + Math.random() * 100;
+    this.velocidadY = Math.random() * 1.5 + 1.2;
+    this.balanceo = Math.random() * 100;
+    this.velocidadBalanceo = Math.random() * 0.02 + 0.01;
+    
+    const coloresGlobos = ['#ff4081', '#00e676', '#00b0ff', '#ffea00', '#d500f9', '#ff9100'];
+    this.color = coloresGlobos[Math.floor(Math.random() * coloresGlobos.length)];
+  }
+  dibujar() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    
+    // Hilo del globo
+    ctx.beginPath();
+    ctx.moveTo(0, this.alto / 2);
+    ctx.quadraticCurveTo(Math.sin(this.balanceo) * 5, this.alto / 2 + 15, 0, this.alto / 2 + 30);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Cuerpo redondo
+    ctx.beginPath();
+    ctx.scale(1, 1.25);
+    ctx.arc(0, 0, this.ancho / 2, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    
+    // Nudo inferior
+    ctx.restore();
+    ctx.save();
+    ctx.translate(this.x, this.y + this.alto / 2);
+    ctx.beginPath();
+    ctx.moveTo(-4, 0); ctx.lineTo(4, 0); ctx.lineTo(0, 6);
+    ctx.closePath();
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.restore();
+  }
+  actualizar() {
+    this.y -= this.velocidadY;
+    this.balanceo += this.velocidadBalanceo;
+    this.x += Math.sin(this.balanceo) * 0.4;
+  }
+}
+
+// ==========================================
+// PARTE 4: BUCLE PRINCIPAL DE ANIMACIÓN Y EVENTOS
 // ==========================================
 
 function animarFuegos() {
@@ -176,21 +262,29 @@ function animarFuegos() {
   if (Math.random() < 0.04) crearFuegoArtificial();
   if (confetiLista.length < 60) { confetiLista.push(new ConfetiDorada()); }
   
+  // Generador de globos en pantalla
+  if (globosLista.length < 15 && Math.random() < 0.02) { globosLista.push(new GloboFlotante()); }
+  
   particulas.forEach((p, index) => {
     if (p.alpha <= 0) { particulas.splice(index, 1); } else { p.actualizar(); p.dibujar(); }
   });
   
   confetiLista.forEach((c, index) => {
-    if (c.y > canvas.height) { 
-      confetiLista[index] = new ConfetiDorada(); 
-    } else { 
-      c.actualizar(); 
-      c.dibujar(); 
-    }
+    if (c.y > canvas.height) { confetiLista[index] = new ConfetiDorada(); } else { c.actualizar(); c.dibujar(); }
   });
 
   sombrerosLista.forEach((s, index) => {
     if (s.alpha <= 0) { sombrerosLista.splice(index, 1); } else { s.actualizar(); s.dibujar(); }
+  });
+
+  // Renderizado e hilos de globos
+  globosLista.forEach((g, index) => {
+    if (g.y < -g.alto) { 
+      globosLista.splice(index, 1); 
+    } else { 
+      g.actualizar(); 
+      g.dibujar(); 
+    }
   });
   
   loopFuegos = requestAnimationFrame(animarFuegos);
@@ -199,9 +293,6 @@ function animarFuegos() {
 function guardarYMostrarHistorial(nombreEstudiante = null) {
   let historial = JSON.parse(localStorage.getItem('cuadroHonorGraduados')) || [];
 
-    historial = []; // Limpia la lista por completo
-
-
   if (nombreEstudiante) {
     const ahora = new Date();
     const fechaText = ahora.toLocaleDateString([], {day: '2-digit', month: '2-digit'}) + ' ' + ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -209,7 +300,6 @@ function guardarYMostrarHistorial(nombreEstudiante = null) {
     localStorage.setItem('cuadroHonorGraduados', JSON.stringify(historial));
   }
 
-  // VALIDACIÓN SEGURA: Solo dibuja si el contenedor existe en tu HTML
   if (listaGraduadosDiv) {
     listaGraduadosDiv.innerHTML = "";
     historial.forEach(item => {
@@ -257,6 +347,7 @@ btnOtro.addEventListener('click', () => {
   particulas = [];
   confetiLista = [];
   sombrerosLista = [];
+  globosLista = []; // Limpieza de globos al reiniciar
   inputNombre.value = "";
   tarjeta.classList.remove('activo');
   modal.classList.remove('oculto');
