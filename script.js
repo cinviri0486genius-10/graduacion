@@ -1,262 +1,235 @@
-// ==========================================
-// PARTE 1: CAPTURA DE COMPONENTES Y AUDIO SEGURO
-// ==========================================
-
-const canvas = document.getElementById('canvas-pirotecnia');
-const ctx = canvas.getContext('2d');
-const modal = document.getElementById('modal-graduado');
-const inputNombre = document.getElementById('nombre-graduado');
-const btnCelebrar = document.getElementById('btn-celebrar');
-const btnOtro = document.getElementById('btn-otro');
-const tarjeta = document.querySelector('.tarjeta-diploma');
-const textoNombre = document.getElementById('texto-nombre');
-const sombreroElement = document.querySelector('.sombrero-3d');
-const listaGraduadosDiv = document.getElementById('lista-graduados');
-
-let particulas = [];
-let confetiLista = [];
-let sombrerosLista = [];
-let loopFuegos = null;
-
-let audioCtx = null;
-
-function iniciarAudioSeguro() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+body {
+  background: radial-gradient(circle, #0f172a, #020617); /* Fondo espacial oscuro */
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  font-family: 'Comic Neue', sans-serif;
 }
 
-function ajustarCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', ajustarCanvas);
-ajustarCanvas();
-
-function sonidoExplosion() {
-  if (!audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-  
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(180, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.3);
-  
-  gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
-  
-  osc.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.3);
+/* CANVAS DE FUEGOS ARTIFICIALES */
+#canvas-pirotecnia {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  pointer-events: none;
+  z-index: 1;
 }
 
-function reproducirAplausos() {
-  if (!audioCtx) return;
-  const duracion = 3.5; 
-  const palmadasTotal = 120;
-
-  for (let i = 0; i < palmadasTotal; i++) {
-    const tiempoRetraso = Math.random() * duracion;
-    
-    setTimeout(() => {
-      if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(Math.random() * 120 + 90, audioCtx.currentTime);
-      
-      gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.04);
-      
-      osc.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.04);
-    }, tiempoRetraso * 1000);
-  }
+/* TARJETA ESTILO CRISTAL */
+.tarjeta-diploma {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 40px;
+  border-radius: 30px;
+  text-align: center;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  max-width: 450px;
+  width: 90%;
+  z-index: 10;
+  display: none; /* Oculta por completo la tarjeta al inicio para que no estorbe */
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-// ==========================================
-// PARTE 2: MOTORES DE FÍSICA PARA PARTÍCULAS
-// ==========================================
-
-class Particula {
-  constructor(x, y, color) {
-    this.x = x; this.y = y;
-    this.color = color;
-    this.radio = Math.random() * 2 + 1;
-    const angulo = Math.random() * Math.PI * 2;
-    const velocidad = Math.random() * 4 + 2;
-    this.vx = Math.cos(angulo) * velocidad;
-    this.vy = Math.sin(angulo) * velocidad;
-    this.alpha = 1;
-    this.gravedad = 0.06;
-  }
-  dibujar() {
-    ctx.save(); ctx.globalAlpha = this.alpha; ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radio, 0, Math.PI * 2);
-    ctx.fillStyle = this.color; ctx.fill(); ctx.restore();
-  }
-  actualizar() {
-    this.x += this.vx; this.vy += this.gravedad; this.y += this.vy;
-    this.alpha -= 0.015;
-  }
+/* FUERZA LA VISIBILIDAD DE LA TARJETA AL ESTAR ACTIVA */
+.tarjeta-diploma.activo {
+  display: block !important;
+  opacity: 1 !important;
+  transform: scale(1) !important;
 }
 
-class ConfetiDorada {
-  constructor() {
-    this.x = Math.random() * canvas.width;
-    this.y = Math.random() * -50 - 10;
-    this.ancho = Math.random() * 6 + 6;
-    this.alto = Math.random() * 4 + 8;
-    this.velocidadY = Math.random() * 1 + 0.8;
-    this.balanceo = Math.random() * 2;
-    this.velocidadBalanceo = Math.random() * 0.03 + 0.01;
-    const tonosOro = ['#ffd700', '#ffca28', '#ffb300', '#ffe082', '#d4af37'];
-    this.color = tonosOro[Math.floor(Math.random() * tonosOro.length)];
-    this.rotacion = Math.random() * 360;
-    this.velocidadRotacion = Math.random() * 4 - 2;
-  }
-  dibujar() {
-    ctx.save(); ctx.translate(this.x + this.ancho / 2, this.y + this.alto / 2);
-    ctx.rotate(this.rotacion * Math.PI / 180); ctx.fillStyle = this.color;
-    ctx.fillRect(-this.ancho / 2, -this.alto / 2, this.ancho, this.alto); ctx.restore();
-  }
-  actualizar() {
-    this.y += this.velocidadY; this.balanceo += this.velocidadBalanceo;
-    this.x += Math.sin(this.balanceo) * 0.5; this.rotacion += this.velocidadRotacion;
-  }
+h1 {
+  font-family: 'Black Ops One', serif;
+  color: #ffca28; /* Dorado brillante */
+  font-size: 28px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 15px rgba(255, 202, 40, 0.4);
+  margin-top: 25px;
 }
 
-class SombreritoVolador {
-  constructor(x, y) {
-    this.x = x; this.y = y;
-    const angulo = Math.random() * Math.PI + Math.PI; 
-    const velocidad = Math.random() * 6 + 5;
-    this.vx = Math.cos(angulo) * velocidad;
-    this.vy = Math.sin(angulo) * velocidad;
-    this.gravedad = 0.2; 
-    this.rotacion = Math.random() * 360;
-    this.velocidadRotacion = Math.random() * 10 - 5;
-    this.alpha = 1;
-  }
-  dibujar() {
-    ctx.save(); ctx.globalAlpha = this.alpha; ctx.translate(this.x, this.y);
-    ctx.rotate(this.rotacion * Math.PI / 180);
-    ctx.fillStyle = '#0f172a'; ctx.strokeStyle = '#334155'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(15, 0); ctx.lineTo(0, 8); ctx.lineTo(-15, 0);
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#f59e0b'; ctx.fillRect(-8, 2, 2, 8); ctx.restore();
-  }
-  actualizar() {
-    this.x += this.vx; this.vy += this.gravedad; this.y += this.vy;
-    if (this.vy > 0) this.alpha -= 0.02;
-  }
+h2 {
+  font-family: 'Comic Neue', sans-serif;
+  color: #ffffff;
+  font-size: 36px;
+  margin: 15px 0;
+  text-transform: uppercase;
+  border-bottom: 2px dashed rgba(255, 255, 255, 0.3);
+  padding-bottom: 10px;
 }
 
-function crearFuegoArtificial() {
-  const x = Math.random() * canvas.width;
-  const y = Math.random() * (canvas.height * 0.4) + canvas.height * 0.1;
-  const colores = ['#ff4081', '#00e676', '#00b0ff', '#ffea00', '#d500f9', '#ffffff'];
-  const color = colores[Math.floor(Math.random() * colores.length)];
-  sonidoExplosion();
-  for (let i = 0; i < 40; i++) { particulas.push(new Particula(x, y, color)); }
+.mensaje-inspirador {
+  color: #cbd5e1;
+  font-size: 18px;
+  line-height: 1.6;
 }
 
-// ==========================================
-// PARTE 3: BUCLE GRÁFICO E INTERACCIÓN
-// ==========================================
-
-function animarFuegos() {
-  ctx.fillStyle = 'rgba(2, 6, 23, 0.2)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  if (Math.random() < 0.04) crearFuegoArtificial();
-  if (confetiLista.length < 60) { confetiLista.push(new ConfetiDorada()); }
-  
-  particulas.forEach((p, index) => {
-    if (p.alpha <= 0) { particulas.splice(index, 1); } else { p.actualizar(); p.dibujar(); }
-  });
-  
-  confetiLista.forEach((c, index) => {
-    if (c.y > canvas.height) { 
-      confetiLista[index] = new ConfetiDorada(); 
-    } else { 
-      c.actualizar(); 
-      c.dibujar(); 
-    }
-  });
-
-  sombrerosLista.forEach((s, index) => {
-    if (s.alpha <= 0) { sombrerosLista.splice(index, 1); } else { s.actualizar(); s.dibujar(); }
-  });
-  
-  loopFuegos = requestAnimationFrame(animarFuegos);
+/* --- MODELADO 3D DEL SOMBRERO DE GRADUACIÓN --- */
+.sombrero-3d {
+  position: relative;
+  width: 120px;
+  height: 70px;
+  margin: 0 auto;
+  transform-style: preserve-3d;
+  animation: flotarSombrero 4s ease-in-out infinite;
+  cursor: pointer; /* Indica que se puede pulsar */
 }
 
-function guardarYMostrarHistorial(nombreEstudiante = null) {
-  let historial = JSON.parse(localStorage.getItem('cuadroHonorGraduados')) || [];
-
-  if (nombreEstudiante) {
-    const ahora = new Date();
-    const fechaText = ahora.toLocaleDateString([], {day: '2-digit', month: '2-digit'}) + ' ' + ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    historial.unshift({ nombre: nombreEstudiante, fecha: fechaText });
-    localStorage.setItem('cuadroHonorGraduados', JSON.stringify(historial));
-  }
-
-  // VALIDACIÓN SEGURA: Solo dibuja si el contenedor existe en tu HTML
-  if (listaGraduadosDiv) {
-    listaGraduadosDiv.innerHTML = "";
-    historial.forEach(item => {
-      const div = document.createElement('div');
-      div.classList.add('item-graduado');
-      div.innerHTML = `<span>🎓 <b>${item.nombre}</b></span> <span class="fecha">${item.fecha}</span>`;
-      listaGraduadosDiv.appendChild(div);
-    });
-  }
+.rombo-superior {
+  position: absolute;
+  width: 120px; height: 45px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border: 1px solid #334155;
+  transform: rotateX(60deg) rotateZ(45deg);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+  z-index: 4;
 }
 
-if (sombreroElement) {
-  sombreroElement.addEventListener('click', () => {
-    iniciarAudioSeguro();
-    const rect = sombreroElement.getBoundingClientRect();
-    const centroX = rect.left + rect.width / 2;
-    const centroY = rect.top + rect.height / 2;
-    
-    sonidoExplosion();
-    for (let i = 0; i < 8; i++) {
-      sombrerosLista.push(new SombreritoVolador(centroX, centroY));
-    }
-  });
+.base-cilindro {
+  position: absolute;
+  bottom: 0; left: 32px;
+  width: 56px; height: 25px;
+  background: linear-gradient(to right, #0f172a, #1e293b, #0f172a);
+  border-radius: 50% / 0 0 100% 100%;
+  z-index: 2;
 }
 
-btnCelebrar.addEventListener('click', () => {
-  const nombre = inputNombre.value.trim();
-  if (nombre !== "") {
-    iniciarAudioSeguro();
-    textoNombre.textContent = nombre;
-    modal.classList.add('oculto');
-    tarjeta.classList.add('activo');
-    
-    guardarYMostrarHistorial(nombre);
-    reproducirAplausos();
-    animarFuegos();
-  } else {
-    inputNombre.style.borderColor = "#ff4081";
-  }
-});
+.borla-hilo {
+  position: absolute;
+  top: 22px; left: 18px;
+  width: 45px; height: 2px;
+  background-color: #f59e0b; /* Hilo dorado */
+  transform: rotate(20deg);
+  z-index: 5;
+}
 
-btnOtro.addEventListener('click', () => {
-  cancelAnimationFrame(loopFuegos);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  particulas = [];
-  confetiLista = [];
-  sombrerosLista = [];
-  inputNombre.value = "";
-  tarjeta.classList.remove('activo');
-  modal.classList.remove('oculto');
-});
+.borla-gota {
+  position: absolute;
+  top: 34px; left: 14px;
+  width: 8px; height: 14px;
+  background-color: #d97706;
+  border-radius: 50%;
+  z-index: 5;
+}
 
-document.addEventListener('DOMContentLoaded', () => { guardarYMostrarHistorial(); });
+@keyframes flotarSombrero {
+  0%, 100% { transform: translateY(0) rotateY(-10deg); }
+  50% { transform: translateY(-12px) rotateY(10deg); }
+}
+
+/* MODAL DE REGISTRO INTEGRAL CORREGIDO */
+.modal-graduado {
+  position: fixed;
+  top: 0; left: 0; 
+  width: 100vw; height: 100vh;
+  background-color: rgba(2, 6, 23, 0.7); /* Capa oscura equilibrada */
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+/* CLASE QUE SE OCULTA DESDE JS */
+.modal-graduado.oculto { 
+  opacity: 0 !important; 
+  visibility: hidden !important; 
+  pointer-events: none !important; 
+}
+
+.tarjeta-registro {
+  background: #ffffff; /* Fondo completamente blanco y sólido */
+  padding: 35px;
+  border-radius: 25px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+  max-width: 340px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tarjeta-registro h3 { margin: 0 0 10px 0; color: #0f172a; font-size: 22px; }
+.tarjeta-registro p { color: #475569; margin-bottom: 20px; margin-top: 0;}
+
+.tarjeta-registro input {
+  width: 90%; padding: 12px;
+  border: 2px solid #cbd5e1; border-radius: 12px;
+  font-size: 16px; text-align: center; margin-bottom: 20px;
+  outline: none; font-family: inherit; background-color: #fff;
+  color: #111;
+}
+
+.tarjeta-registro button {
+  background: #f59e0b; color: white; border: none;
+  padding: 12px 30px; font-size: 16px; font-weight: bold;
+  border-radius: 12px; cursor: pointer; transition: all 0.2s;
+}
+.tarjeta-registro button:active { transform: scale(0.95); }
+
+.btn-otro {
+  background: transparent; color: #94a3b8; border: 2px dashed #475569;
+  padding: 8px 15px; font-size: 13px; border-radius: 10px;
+  cursor: pointer; margin-top: 25px; font-family: inherit;
+}
+.btn-otro:hover { color: #ffca28; border-color: #ffca28; }
+
+/* CUADRO DE HONOR DE GRADUADOS */
+.contenedor-historial {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.2);
+  text-align: left;
+}
+
+.contenedor-historial h4 {
+  margin: 0 0 10px 0;
+  color: #ffca28;
+  font-family: 'Black Ops One', serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.lista-graduados {
+  max-height: 110px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.lista-graduados::-webkit-scrollbar { width: 4px; }
+.lista-graduados::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 4px; }
+
+.item-graduado {
+  font-size: 14px;
+  color: #e2e8f0;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.item-graduado span.fecha {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+/* ANIMACIÓN AL MOSTRAR EL DIPLOMA */
+.tarjeta-diploma.activo .sombrero-3d {
+  animation: saltarSombrero 1s ease-out, flotarSombrero 4s ease-in-out infinite 1s;
+}
+
+@keyframes saltarSombrero {
+  0% { transform: scale(0.3) rotate(0deg); }
+  50% { transform: scale(1.3) rotate(15deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
