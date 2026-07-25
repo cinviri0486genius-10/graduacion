@@ -18,7 +18,6 @@ let confetiLista = [];
 let sombrerosLista = [];
 let loopFuegos = null;
 
-// UN SOLO CANAL DE AUDIO GLOBAL (Evita que el navegador se trabe o bloquee)
 let audioCtx = null;
 
 function iniciarAudioSeguro() {
@@ -34,7 +33,6 @@ function ajustarCanvas() {
 window.addEventListener('resize', ajustarCanvas);
 ajustarCanvas();
 
-// AUDIO DE IMPACTO OPTIMIZADO REUTILIZANDO EL CANAL GLOBAL
 function sonidoExplosion() {
   if (!audioCtx) return;
   const osc = audioCtx.createOscillator();
@@ -53,11 +51,10 @@ function sonidoExplosion() {
   osc.stop(audioCtx.currentTime + 0.3);
 }
 
-// APLAUSOS OPTIMIZADOS
 function reproducirAplausos() {
   if (!audioCtx) return;
   const duracion = 3.5; 
-  const palmadasTotal = 120; // Cantidad controlada para no saturar el procesador
+  const palmadasTotal = 120;
 
   for (let i = 0; i < palmadasTotal; i++) {
     const tiempoRetraso = Math.random() * duracion;
@@ -183,7 +180,6 @@ function animarFuegos() {
     if (p.alpha <= 0) { particulas.splice(index, 1); } else { p.actualizar(); p.dibujar(); }
   });
   
-  // SECCIÓN COMPLETAMENTE CORREGIDA: Eliminamos la propiedad .gray que causaba el bloqueo
   confetiLista.forEach((c, index) => {
     if (c.y > canvas.height) { 
       confetiLista[index] = new ConfetiDorada(); 
@@ -210,6 +206,7 @@ function guardarYMostrarHistorial(nombreEstudiante = null) {
     localStorage.setItem('cuadroHonorGraduados', JSON.stringify(historial));
   }
 
+  // VALIDACIÓN SEGURA: Solo dibuja si el contenedor existe en tu HTML
   if (listaGraduadosDiv) {
     listaGraduadosDiv.innerHTML = "";
     historial.forEach(item => {
@@ -221,7 +218,6 @@ function guardarYMostrarHistorial(nombreEstudiante = null) {
   }
 }
 
-// Clic directo en el birrete 3D para lanzar sombreritos
 if (sombreroElement) {
   sombreroElement.addEventListener('click', () => {
     iniciarAudioSeguro();
@@ -239,7 +235,7 @@ if (sombreroElement) {
 btnCelebrar.addEventListener('click', () => {
   const nombre = inputNombre.value.trim();
   if (nombre !== "") {
-    iniciarAudioSeguro(); // Desbloquea de manera segura el contexto de audio interactivo
+    iniciarAudioSeguro();
     textoNombre.textContent = nombre;
     modal.classList.add('oculto');
     tarjeta.classList.add('activo');
