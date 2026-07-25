@@ -199,6 +199,9 @@ function animarFuegos() {
 function guardarYMostrarHistorial(nombreEstudiante = null) {
   let historial = JSON.parse(localStorage.getItem('cuadroHonorGraduados')) || [];
 
+    historial = []; // Limpia la lista por completo
+
+
   if (nombreEstudiante) {
     const ahora = new Date();
     const fechaText = ahora.toLocaleDateString([], {day: '2-digit', month: '2-digit'}) + ' ' + ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
